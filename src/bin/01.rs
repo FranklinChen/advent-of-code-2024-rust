@@ -20,9 +20,13 @@ pub fn part_one(input: &str) -> Option<u32> {
     }
     v0.sort_unstable();
     v1.sort_unstable();
-    let sum = v0.iter().zip(v1.iter()).map(|(n0, n1)| if n0 > n1 { n0 - n1 } else { n1 - n0 }).sum();
+    let sum = v0
+        .iter()
+        .zip(v1.iter())
+        .map(|(n0, n1)| if n0 > n1 { n0 - n1 } else { n1 - n0 })
+        .sum();
     Some(sum)
- }
+}
 
 pub fn part_two(input: &str) -> Option<u32> {
     // Read in one line at a time.
