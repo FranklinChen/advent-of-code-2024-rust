@@ -34,6 +34,25 @@ fn report_is_safe(levels: &[u32]) -> bool {
     true
 }
 
+// A report is tolerably safe it is either safe, as is, or
+// if it would be safe if one level were removed.
+fn report_is_tolerably_safe(levels: &[u32]) -> bool {
+    // Do the most naive way, super inefficient.
+    if report_is_safe(levels) {
+        return true;
+    }
+
+    for i in 0..levels.len() {
+        let mut levels = levels.to_vec();
+        levels.remove(i);
+        if report_is_safe(&levels) {
+            return true;
+        }
+    }
+
+    false
+}
+
 pub fn part_one(input: &str) -> Option<u32> {
     // Read one line at a time.
 
@@ -61,7 +80,29 @@ pub fn part_one(input: &str) -> Option<u32> {
 }
 
 pub fn part_two(input: &str) -> Option<u32> {
-    None
+    // Read one line at a time.
+
+    // For each line, parse into whitespace-delimited integers
+    // ("levels") into a vector that is a "report".
+
+    // For each report, determine whether it is tolerably safe.
+    // Return number of safe reports by summing over iterator.
+    Some(
+        input
+            .lines()
+            .filter_map(|line| {
+                let levels: Vec<u32> = line
+                    .split_whitespace()
+                    .filter_map(|num| num.parse::<u32>().ok())
+                    .collect();
+                if report_is_tolerably_safe(&levels) {
+                    Some(1)
+                } else {
+                    None
+                }
+            })
+            .sum(),
+    )
 }
 
 #[cfg(test)]
