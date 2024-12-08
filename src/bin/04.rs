@@ -77,7 +77,44 @@ pub fn part_one(input: &str) -> Option<u32> {
 }
 
 pub fn part_two(input: &str) -> Option<u32> {
-    None
+    let lines: Vec<&[u8]> = input.lines().map(|line| line.as_bytes()).collect();
+    let num_rows = lines.len();
+    let num_cols = lines[0].len();
+
+    // Find all X-MAS patterns in the 2d grid. Define X-MAS
+    // as a 3x3 grid with a pattern of two diagonals spelling out MAS
+    // in any direction, e.g.
+    //
+    // M.S
+    // .A.
+    // M.S
+    //
+    // where the . are any character.
+    let mut sum = 0;
+    for row_idx in 0..num_rows - 2 {
+        for col_idx in 0..num_cols - 2 {
+            // First check the middle of the grid for an A.
+            // Then check the top-left to bottom-right diagonal for two
+            // possible directions of the M and S. Then check
+            // the top-right to bottom-left diagonal for the other
+            // two possible directions of the M and S.
+            if lines[row_idx + 1][col_idx + 1] == b'A'
+                && (lines[row_idx][col_idx] == b'M' && lines[row_idx + 2][col_idx + 2] == b'S'
+                    || lines[row_idx + 2][col_idx+2] == b'M' && lines[row_idx ][col_idx] == b'S')
+                && (lines[row_idx][col_idx + 2] == b'M' && lines[row_idx + 2][col_idx] == b'S'
+                    || lines[row_idx+2][col_idx] == b'M' && lines[row_idx][col_idx + 2] == b'S')
+            {
+                sum += 1;
+
+                // Debug: look at the location of the A.
+                if false {
+                    dbg!((row_idx+1, col_idx+1));
+                }
+            }
+        }
+    }
+
+    Some(sum)
 }
 
 #[cfg(test)]
@@ -93,6 +130,6 @@ mod tests {
     #[test]
     fn test_part_two() {
         let result = part_two(&advent_of_code::template::read_file("examples", DAY));
-        assert_eq!(result, None);
+        assert_eq!(result, Some(9));
     }
 }
