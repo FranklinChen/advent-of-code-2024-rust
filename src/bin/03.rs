@@ -7,6 +7,10 @@ static RE: LazyLock<Regex> = LazyLock::new(|| {
     Regex::new(r"mul\((\d+),(\d+)\)").expect("Failed to compile regex")
 });
 
+static RE_PART2: LazyLock<Regex> = LazyLock::new(|| {
+    Regex::new(r"(mul\((\d+),(\d+)\))|(do\(\))|(don't\(\))").expect("Failed to compile regex")
+});
+
 pub fn part_one(input: &str) -> Option<u32> {
     // Extract info from the entire input (not breaking up into lines):
     // Find all "mul(X,Y)" where X and Y are 1-3 digit numbers.
@@ -26,7 +30,34 @@ pub fn part_one(input: &str) -> Option<u32> {
 }
 
 pub fn part_two(input: &str) -> Option<u32> {
-    None
+    // Similar to part 1, except that we should not only scan for
+    // "mul(X,Y) but also for "do()" and "don't()" literal
+    // instructions.
+    //
+    // When interpreting a token stream of these three types of
+    // instructions, maintain state such that initially, multiplications
+    // are enabled, but whenever seeing "don't()" they are disabled,
+    // and whenever seeing "do()" they are enabled.
+    // Sum all of the enabled multiplications.
+    // Return the sum.
+    let mut is_enabled = true; // Initially, multiplications are enabled.
+    let mut sum = 0;
+
+    for cap in RE_PART2.captures_iter(input) {
+        if let Some(_) = cap.get(1) {
+            if is_enabled {
+                let x: u32 = cap[2].parse().unwrap();
+                let y: u32 = cap[3].parse().unwrap();
+                sum += x * y;
+            }
+        } else if let Some(_) = cap.get(4) {
+            is_enabled = true;
+        } else if let Some(_) = cap.get(5) {
+            is_enabled = false;
+        }
+    }
+
+    Some(sum)
 }
 
 #[cfg(test)]
