@@ -43,15 +43,15 @@ pub fn part_two(input: &str) -> Option<u32> {
     let mut sum = 0;
 
     for cap in RE_PART2.captures_iter(input) {
-        if let Some(_) = cap.get(1) {
+        if cap.get(1).is_some() {
             if is_enabled {
                 let x: u32 = cap[2].parse().unwrap();
                 let y: u32 = cap[3].parse().unwrap();
                 sum += x * y;
             }
-        } else if let Some(_) = cap.get(4) {
+        } else if cap.get(4).is_some() {
             is_enabled = true;
-        } else if let Some(_) = cap.get(5) {
+        } else if cap.get(5).is_some() {
             is_enabled = false;
         }
     }
