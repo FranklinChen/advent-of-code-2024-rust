@@ -1,11 +1,10 @@
 advent_of_code::solution!(3);
 
-use std::sync::LazyLock;
 use regex::Regex;
+use std::sync::LazyLock;
 
-static RE: LazyLock<Regex> = LazyLock::new(|| {
-    Regex::new(r"mul\((\d+),(\d+)\)").expect("Failed to compile regex")
-});
+static RE: LazyLock<Regex> =
+    LazyLock::new(|| Regex::new(r"mul\((\d+),(\d+)\)").expect("Failed to compile regex"));
 
 static RE_PART2: LazyLock<Regex> = LazyLock::new(|| {
     Regex::new(r"(mul\((\d+),(\d+)\))|(do\(\))|(don't\(\))").expect("Failed to compile regex")
@@ -72,7 +71,9 @@ mod tests {
 
     #[test]
     fn test_part_two() {
-        let result = part_two(&advent_of_code::template::read_file_part("examples", DAY, 2));
+        let result = part_two(&advent_of_code::template::read_file_part(
+            "examples", DAY, 2,
+        ));
         assert_eq!(result, Some(48));
     }
 }
