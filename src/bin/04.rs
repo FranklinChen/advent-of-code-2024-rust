@@ -36,9 +36,7 @@ fn extract_all_sequences(input: &str) -> Vec<Vec<u8>> {
 
     // Extract right-left bottom-top diagonals from top left.
     for diag_idx in 0..num_rows {
-        let diag_bytes: Vec<u8> = (0..diag_idx + 1)
-            .map(|i| lines[diag_idx - i][i])
-            .collect();
+        let diag_bytes: Vec<u8> = (0..diag_idx + 1).map(|i| lines[diag_idx - i][i]).collect();
         sequences.push(diag_bytes);
     }
 
@@ -69,10 +67,8 @@ pub fn part_one(input: &str) -> Option<u32> {
     Some(
         sequences
             .iter()
-            .map(|haystack|
-                ac.find_overlapping_iter(haystack).count() as u32
-            )
-            .sum()
+            .map(|haystack| ac.find_overlapping_iter(haystack).count() as u32)
+            .sum(),
     )
 }
 
@@ -100,15 +96,15 @@ pub fn part_two(input: &str) -> Option<u32> {
             // two possible directions of the M and S.
             if lines[row_idx + 1][col_idx + 1] == b'A'
                 && (lines[row_idx][col_idx] == b'M' && lines[row_idx + 2][col_idx + 2] == b'S'
-                    || lines[row_idx + 2][col_idx+2] == b'M' && lines[row_idx ][col_idx] == b'S')
+                    || lines[row_idx + 2][col_idx + 2] == b'M' && lines[row_idx][col_idx] == b'S')
                 && (lines[row_idx][col_idx + 2] == b'M' && lines[row_idx + 2][col_idx] == b'S'
-                    || lines[row_idx+2][col_idx] == b'M' && lines[row_idx][col_idx + 2] == b'S')
+                    || lines[row_idx + 2][col_idx] == b'M' && lines[row_idx][col_idx + 2] == b'S')
             {
                 sum += 1;
 
                 // Debug: look at the location of the A.
                 if false {
-                    dbg!((row_idx+1, col_idx+1));
+                    dbg!((row_idx + 1, col_idx + 1));
                 }
             }
         }

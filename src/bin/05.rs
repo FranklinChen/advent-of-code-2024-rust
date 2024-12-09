@@ -1,7 +1,88 @@
 advent_of_code::solution!(5);
 
+// For creating a graph of constraints.
+use std::collections::HashMap;
+
+type Page = u8;
+
+type Graph = HashMap<Page, Vec<Page>>;
+
+// Lines of the form:
+//
+// 47|53
+// 97|13
+// 97|61
+fn parse_graph(input: &str) -> Graph {
+    let mut graph = Graph::new();
+
+    for line in input.lines() {
+        let mut parts = line.split('|');
+        let src = parts.next().unwrap().parse::<Page>().unwrap();
+        let dest = parts.next().unwrap().parse::<Page>().unwrap();
+
+        graph.entry(src).or_default().push(dest);
+    }
+
+    graph
+}
+
+// Return whether the pages are in a valid order according
+// to the constraints encoded in the graph that involve only
+// the pages in the list.
+//
+// Just run through the whole graph.
+fn is_valid_order(graph: &Graph, pages: &[Page]) -> bool {
+    // Page -> index into pages.
+    let position: HashMap<Page, usize> = pages
+        .iter()
+        .enumerate()
+        .map(|(i, &page)| (page, i))
+        .collect();
+
+    for (&src, dests) in graph {
+        // Ignore constraints if src is not in pages.
+        if let Some(&src_pos) = position.get(&src) {
+            for &dest in dests {
+                // Ignore constraints if dest is not in pages.
+                if let Some(&dest_pos) = position.get(&dest) {
+                    // Look for a violation.
+                    if src_pos >= dest_pos {
+                        return false;
+                    }
+                }
+            }
+        }
+    }
+
+    true
+}
+
 pub fn part_one(input: &str) -> Option<u32> {
-    None
+    let mut sections = input.split("\n\n");
+    let graph_section = sections.next().unwrap();
+    let rules_section = sections.next().unwrap();
+
+    let graph = parse_graph(graph_section);
+
+    // Return sum of the middle page of each valid rule.
+    Some(
+        rules_section
+            .lines()
+            .filter_map(|line| {
+                let pages = line
+                    .split(',')
+                    .map(|page| page.parse::<Page>().unwrap())
+                    .collect::<Vec<_>>();
+
+                if is_valid_order(&graph, &pages) {
+                    let middle = pages[pages.len() / 2];
+                    Some(middle as u32)
+                } else {
+                    None
+                }
+            })
+            .sum(),
+    )
 }
 
 pub fn part_two(input: &str) -> Option<u32> {
