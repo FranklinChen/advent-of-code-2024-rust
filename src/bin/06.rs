@@ -2,7 +2,17 @@ advent_of_code::solution!(6);
 
 use std::collections::HashSet;
 
-fn parse_to_grid(input: &str) -> (Vec<Vec<bool>>, (usize, usize)) {
+type Location = (usize, usize);
+
+type Direction = (i32, i32);
+
+type Visited = HashSet<(Location, Direction)>;
+
+type Grid = Vec<Vec<bool>>;
+
+type Locations = HashSet<Location>;
+
+fn parse_to_grid(input: &str) -> (Grid, Location) {
     // Read in the grid of ASCII characters which are either
     // . (open)
     // # (obstacle)
@@ -55,17 +65,20 @@ pub fn part_one(input: &str) -> Option<u32> {
     }
 
     // Get the visited locations.
-    let locations: HashSet<_> = visited.iter().map(|(pos, _)| *pos).collect();
+    let locations: Locations = visited.iter().map(|(pos, _)| *pos).collect();
 
     Some(locations.len() as u32)
 }
 
-fn run(grid: &Vec<Vec<bool>>, mut guard_pos: (usize, usize)) -> (bool, HashSet<((usize, usize), (i32, i32))>) {
+fn run(
+    grid: &[Vec<bool>],
+    mut guard_pos: Location,
+) -> (bool, Visited) {
     let rows = grid.len() as i32;
     let cols = grid[0].len() as i32;
 
     let mut guard_dir: (i32, i32) = (-1, 0); // Always start facing up.
-    let mut visited: HashSet<((usize, usize), (i32, i32))> = HashSet::new();
+    let mut visited: Visited = HashSet::new();
 
     // Mark the initial state as visited.
     visited.insert((guard_pos, guard_dir));
@@ -121,13 +134,10 @@ pub fn part_two(input: &str) -> Option<u32> {
     // Get the set of all locations (usize, usize)
     // in the visited path other than
     // the initial guard one.
-    let locations: HashSet<_> = visited.iter().filter_map(|(pos, _)| {
-        if *pos == guard_pos {
-            None
-        } else {
-            Some(*pos)
-        }
-    }).collect();
+    let locations: Locations = visited
+        .iter()
+        .filter_map(|(pos, _)| if *pos == guard_pos { None } else { Some(*pos) })
+        .collect();
 
     for &(i, j) in locations.iter() {
         // Temporarily modify the grid.
