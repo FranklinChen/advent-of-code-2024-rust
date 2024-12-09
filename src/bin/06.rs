@@ -1,6 +1,8 @@
 advent_of_code::solution!(6);
 
-pub fn part_one(input: &str) -> Option<u32> {
+use std::collections::HashSet;
+
+fn parse_to_grid(input: &str) -> (Vec<Vec<bool>>, (usize, usize)) {
     // Read in the grid of ASCII characters which are either
     // . (open)
     // # (obstacle)
@@ -37,68 +39,111 @@ pub fn part_one(input: &str) -> Option<u32> {
         panic!("Guard not found in input");
     }
 
-    // Number of rows and columns in the grid.
-    let rows = grid.len();
-    let cols = grid[0].len();
+    (grid, guard_pos)
+}
 
-    let last_row_index = rows - 1;
-    let last_col_index = cols - 1;
+pub fn part_one(input: &str) -> Option<u32> {
+    // Parse the input into a grid and the guard's position.
+    let (grid, guard_pos) = parse_to_grid(input);
 
-    // Keep track of locations already visited.
-    let mut visited = vec![vec![false; cols]; rows];
-    visited[guard_pos.0][guard_pos.1] = true;
+    // Run the original algorithm, returning all location/orientation
+    // pairs.
+    let (is_infinite_loop, visited) = run(&grid, guard_pos);
 
-    // Always start facing up.
-    let mut guard_dir: (i32, i32) = (-1, 0);
-
-    // Number of positions of guard before exiting the grid.
-    let mut num_positions = 1;
-
-    // Keep moving the guard until it exits the grid. The rules:
-    // - Start by moving up from the position of the single ^.
-    // - If currently at the edge and moving off it, exit.
-    // - If facing . then step there and continue on.
-    // - If facing # then turn right and take the next step.
-
-    // Do not check for infinite loop at this point.
-    loop {
-        // Get the current position of the guard.
-        let (i, j) = guard_pos;
-
-        // If the guard is at the edge of the grid, exit.
-        if i == 0 || i == last_row_index || j == 0 || j == last_col_index {
-            break;
-        }
-
-        // If the guard is facing an obstacle, turn right.
-        let (di, dj) = guard_dir;
-        let next_pos = ((i as i32 + di) as usize, (j as i32 + dj) as usize);
-        let (ni, nj) = next_pos;
-
-        if grid[ni][nj] {
-            guard_dir = (dj, -di);
-        }
-
-        let (di, dj) = guard_dir;
-        let next_pos = ((i as i32 + di) as usize, (j as i32 + dj) as usize);
-        let (ni, nj) = next_pos;
-
-        // Check if already visited.
-        if !visited[ni][nj] {
-            // Mark the position as visited.
-            visited[ni][nj] = true;
-            num_positions += 1;
-        }
-
-        // Move the guard in the direction it is facing.
-        guard_pos = next_pos;
+    if is_infinite_loop {
+        return None;
     }
 
-    Some(num_positions)
+    // Get the visited locations.
+    let locations: HashSet<_> = visited.iter().map(|(pos, _)| *pos).collect();
+
+    Some(locations.len() as u32)
+}
+
+fn run(grid: &Vec<Vec<bool>>, mut guard_pos: (usize, usize)) -> (bool, HashSet<((usize, usize), (i32, i32))>) {
+    let rows = grid.len() as i32;
+    let cols = grid[0].len() as i32;
+
+    let mut guard_dir: (i32, i32) = (-1, 0); // Always start facing up.
+    let mut visited: HashSet<((usize, usize), (i32, i32))> = HashSet::new();
+
+    // Mark the initial state as visited.
+    visited.insert((guard_pos, guard_dir));
+
+    loop {
+        let (i, j) = guard_pos;
+        let (di, dj) = guard_dir;
+
+        // Calculate next position.
+        let next_pos = (i as i32 + di, j as i32 + dj);
+
+        // Exit if the guard moves out of bounds.
+        if next_pos.0 < 0 || next_pos.1 < 0 || next_pos.0 >= rows || next_pos.1 >= cols {
+            return (false, visited);
+        }
+
+        let next_pos = (next_pos.0 as usize, next_pos.1 as usize);
+
+        if grid[next_pos.0][next_pos.1] {
+            // If facing an obstacle, turn right.
+            guard_dir = (dj, -di);
+        } else {
+            // Check if the state (position and direction) is already visited.
+            if !visited.insert((next_pos, guard_dir)) {
+                // Infinite loop detected.
+                return (true, visited);
+            }
+            // Move the guard forward.
+            guard_pos = next_pos;
+        }
+    }
 }
 
 pub fn part_two(input: &str) -> Option<u32> {
-    None
+    // Parse the input into a grid and the guard's position.
+    let (mut grid, guard_pos) = parse_to_grid(input);
+
+    // Run the original algorithm, returning all location/orientation
+    // pairs.
+    let (is_infinite_loop, visited) = run(&grid, guard_pos);
+
+    if is_infinite_loop {
+        return None;
+    }
+
+    // For each position along the visited path, except for the
+    // initial one, try placing an obstacle there to form a modified
+    // grid.  Rerun and check if an infinite loop is detected.  Count
+    // the number of obstacle placements that result in an infinite
+    // loop.
+    let mut num_infinite_loops = 0;
+
+    // Get the set of all locations (usize, usize)
+    // in the visited path other than
+    // the initial guard one.
+    let locations: HashSet<_> = visited.iter().filter_map(|(pos, _)| {
+        if *pos == guard_pos {
+            None
+        } else {
+            Some(*pos)
+        }
+    }).collect();
+
+    for &(i, j) in locations.iter() {
+        // Temporarily modify the grid.
+        // If we were parallelizing, we would need to clone the grid.
+        grid[i][j] = true;
+
+        let (is_infinite_loop, _) = run(&grid, guard_pos);
+
+        if is_infinite_loop {
+            num_infinite_loops += 1;
+        }
+
+        grid[i][j] = false;
+    }
+
+    Some(num_infinite_loops)
 }
 
 #[cfg(test)]
@@ -114,6 +159,6 @@ mod tests {
     #[test]
     fn test_part_two() {
         let result = part_two(&advent_of_code::template::read_file("examples", DAY));
-        assert_eq!(result, None);
+        assert_eq!(result, Some(6));
     }
 }
