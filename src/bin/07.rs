@@ -77,10 +77,8 @@ fn can_equal_target_2(target: u64, xs: &[u64]) -> bool {
     let last_x = xs[last];
 
     // See if * could be the final operation.
-    if target % last_x == 0 {
-        if can_equal_target_2(target / last_x, &xs[0..last]) {
-            return true;
-        }
+    if target % last_x == 0 && can_equal_target_2(target / last_x, &xs[0..last]) {
+        return true;
     }
 
     // See if || could be the final operation, by checking
@@ -102,17 +100,14 @@ fn can_equal_target_2(target: u64, xs: &[u64]) -> bool {
             target_prefix /= 10;
         }
 
-        if !mismatch_found {
-            if can_equal_target_2(target_prefix, &xs[0..last]) {
-                return true;
-            }
+        if !mismatch_found && can_equal_target_2(target_prefix, &xs[0..last]) {
+            return true;
         }
     }
 
     // Finally, see if addition works.
-    return target >= last_x && can_equal_target_2(target - last_x, &xs[0..last])
+    target >= last_x && can_equal_target_2(target - last_x, &xs[0..last])
 }
-
 
 pub fn part_one(input: &str) -> Option<u64> {
     // Return the sum of all targets that can be formed from the xs

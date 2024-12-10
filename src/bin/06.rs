@@ -70,10 +70,7 @@ pub fn part_one(input: &str) -> Option<u32> {
     Some(locations.len() as u32)
 }
 
-fn run(
-    grid: &[Vec<bool>],
-    mut guard_pos: Location,
-) -> (bool, Visited) {
+fn run(grid: &[Vec<bool>], mut guard_pos: Location) -> (bool, Visited) {
     let rows = grid.len() as i32;
     let cols = grid[0].len() as i32;
 

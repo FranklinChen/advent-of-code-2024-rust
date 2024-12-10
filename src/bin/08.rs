@@ -66,13 +66,66 @@ impl Antipodes {
             antipodes.insert(*mark, antipode_list);
         }
 
-        Antipodes {
-            antipodes
+        Antipodes { antipodes }
+    }
+
+    /// Just like new, except that we create a lot more antipodes:
+    /// All grid locations evenly spaced on the line extending beyond
+    /// both ends of any two original marks, including those original
+    /// marks, is an antipode. So we can't just look for two anymore,
+    /// but must loop in both directions till off the grid.
+    fn new_on_line(grid: &Grid) -> Self {
+        let mut antipodes = HashMap::new();
+
+        for (mark, locations) in &grid.marks {
+            let mut antipode_list = vec![];
+
+            for i in 0..locations.len() {
+                for j in (i + 1)..locations.len() {
+                    let (x1, y1) = locations[i];
+                    let (x2, y2) = locations[j];
+
+                    let dx = x2 as isize - x1 as isize;
+                    let dy = y2 as isize - y1 as isize;
+
+                    // Try to get antipode 0.
+                    let mut x0 = x1 as isize - dx;
+                    let mut y0 = y1 as isize - dy;
+
+                    // Try to get antipode 3.
+                    let mut x3 = x2 as isize + dx;
+                    let mut y3 = y2 as isize + dy;
+
+                    // Push the original marks.
+                    antipode_list.push((x1, y1));
+                    antipode_list.push((x2, y2));
+
+                    // Push all antipodes on the line.
+                    while x0 >= 0 && x0 < grid.rows as isize && y0 >= 0 && y0 < grid.cols as isize {
+                        antipode_list.push((x0 as usize, y0 as usize));
+                        x0 -= dx;
+                        y0 -= dy;
+                    }
+
+                    while x3 >= 0 && x3 < grid.rows as isize && y3 >= 0 && y3 < grid.cols as isize {
+                        antipode_list.push((x3 as usize, y3 as usize));
+                        x3 += dx;
+                        y3 += dy;
+                    }
+                }
+            }
+
+            antipodes.insert(*mark, antipode_list);
         }
+
+        Antipodes { antipodes }
     }
 
     fn unique_locations(self) -> HashSet<Location> {
-        self.antipodes.into_iter().flat_map(|(_, locations)| locations).collect()
+        self.antipodes
+            .into_iter()
+            .flat_map(|(_, locations)| locations)
+            .collect()
     }
 }
 
@@ -106,7 +159,10 @@ impl Grid {
         let cols = bytes[0].len();
 
         Grid {
-            bytes, rows, cols, marks
+            bytes,
+            rows,
+            cols,
+            marks,
         }
     }
 }
@@ -120,7 +176,11 @@ pub fn part_one(input: &str) -> Option<u32> {
 }
 
 pub fn part_two(input: &str) -> Option<u32> {
-    None
+    let grid = Grid::new(input);
+    let antipodes = Antipodes::new_on_line(&grid);
+    let unique_locations = antipodes.unique_locations();
+
+    Some(unique_locations.len() as u32)
 }
 
 #[cfg(test)]
@@ -136,6 +196,6 @@ mod tests {
     #[test]
     fn test_part_two() {
         let result = part_two(&advent_of_code::template::read_file("examples", DAY));
-        assert_eq!(result, None);
+        assert_eq!(result, Some(34));
     }
 }
