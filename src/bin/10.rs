@@ -106,7 +106,24 @@ pub fn part_one(input: &str) -> Option<u32> {
 }
 
 pub fn part_two(input: &str) -> Option<u32> {
-    None
+    let topo = Topo::new(input);
+    Some(
+        topo.heads
+            .iter()
+            .map(|head| {
+                let rating = topo
+                    .nines
+                    .iter()
+                    .map(|nine| {
+                        all_simple_paths::<Vec<_>, _>(&topo.graph, *head, *nine, 1, None).count()})
+                    .sum::<usize>();
+                if DEBUG {
+                    eprintln!("{head:?} to all nines: {rating}");
+                }
+                rating
+            })
+            .sum::<usize>() as u32,
+    )
 }
 
 #[cfg(test)]
@@ -122,6 +139,6 @@ mod tests {
     #[test]
     fn test_part_two() {
         let result = part_two(&advent_of_code::template::read_file("examples", DAY));
-        assert_eq!(result, None);
+        assert_eq!(result, Some(81));
     }
 }
