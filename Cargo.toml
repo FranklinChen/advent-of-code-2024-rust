@@ -30,3 +30,4 @@ tinyjson = "2.5.1"
 # Solution dependencies
 regex = "*"
 aho-corasick = "*"
+petgraph = "*"

@@ -221,7 +221,7 @@ impl Disk2 {
         let mut free_size = 0;
 
         let mut found = false;
-        for (&free_start, &ref free_space) in self.free_space.iter() {
+        for (&free_start, free_space) in self.free_space.iter() {
             if free_start > cur_start {
                 // Ran out of free space.
                 found = false;
@@ -235,7 +235,10 @@ impl Disk2 {
                 free_size = free_space.size;
 
                 if DEBUG {
-                    eprintln!("Found space at {} of size {} for file {} of size {}", new_start, free_size, file_id, file_size);
+                    eprintln!(
+                        "Found space at {} of size {} for file {} of size {}",
+                        new_start, free_size, file_id, file_size
+                    );
                 }
 
                 break;
@@ -264,7 +267,7 @@ impl Disk2 {
                 },
             );
         }
-        return true;
+        true
     }
 
     /// Compact the disk by moving ID "files" (starting from the
@@ -277,10 +280,8 @@ impl Disk2 {
         }
 
         for file_id in (0..self.files.len()).rev() {
-            if self.move_file_to_leftmost_free_space(file_id as u32) {
-                if DEBUG {
-                    eprintln!("{}", self.small_id_debug());
-                }
+            if self.move_file_to_leftmost_free_space(file_id as u32) && DEBUG {
+                eprintln!("{}", self.small_id_debug());
             }
         }
     }
@@ -295,8 +296,7 @@ impl Disk2 {
             // inclusive. Use math!
             let start: u64 = file.start as u64;
             let size: u64 = file.size as u64;
-            let sum_of_indices: u64 =
-                size * (2 * start + size - 1) / 2;
+            let sum_of_indices: u64 = size * (2 * start + size - 1) / 2;
 
             // Do it naively instead.
             // let sum_of_indices: u64 = (start..(start + size)).sum();
